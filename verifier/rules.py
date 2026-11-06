@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from ipaddress import ip_address
 
 from contract import (
     DNSQuery,
@@ -14,6 +13,101 @@ from contract import (
     ResolutionStatus,
     ResolutionStep,
 )
+
+
+def _parse_ipv4(value: object) -> tuple[bytes, str] | None:
+    if not isinstance(value, str):
+        return None
+    parts = value.split(".")
+    if len(parts) != 4:
+        return None
+
+    numbers: list[int] = []
+    for part in parts:
+        if not part or not part.isascii() or not part.isdigit() or (len(part) > 1 and part.startswith("0")):
+            return None
+        number = int(part)
+        if number > 255:
+            return None
+        numbers.append(number)
+
+    return bytes(numbers), ".".join(str(number) for number in numbers)
+
+
+def _parse_ipv6(value: object) -> tuple[bytes, str] | None:
+    if not isinstance(value, str) or not value or value.count("::") > 1:
+        return None
+
+    if "::" in value:
+        left, right = value.split("::")
+        left_parts = left.split(":") if left else []
+        right_parts = right.split(":") if right else []
+        missing_count = 8 - len(left_parts) - len(right_parts)
+        if missing_count < 1:
+            return None
+        parts = [*left_parts, *(["0"] * missing_count), *right_parts]
+    else:
+        parts = value.split(":")
+        if len(parts) != 8:
+            return None
+
+    numbers: list[int] = []
+    for part in parts:
+        if (
+            not 1 <= len(part) <= 4
+            or not part.isascii()
+            or any(character.lower() not in "0123456789abcdef" for character in part)
+        ):
+            return None
+        numbers.append(int(part, 16))
+
+    best_start = -1
+    best_length = 0
+    start = 0
+    while start < 8:
+        if numbers[start] != 0:
+            start += 1
+            continue
+        end = start
+        while end < 8 and numbers[end] == 0:
+            end += 1
+        if end - start > best_length and end - start >= 2:
+            best_start = start
+            best_length = end - start
+        start = end
+
+    if best_start >= 0:
+        left = ":".join(f"{number:x}" for number in numbers[:best_start])
+        right = ":".join(f"{number:x}" for number in numbers[best_start + best_length :])
+        if left and right:
+            canonical = f"{left}::{right}"
+        elif left:
+            canonical = f"{left}::"
+        elif right:
+            canonical = f"::{right}"
+        else:
+            canonical = "::"
+    else:
+        canonical = ":".join(f"{number:x}" for number in numbers)
+
+    packed = b"".join(number.to_bytes(2, "big") for number in numbers)
+    return packed, canonical
+
+
+def _parse_address(
+    value: object,
+    record_type: RecordType,
+) -> tuple[int, bytes, str] | None:
+    if record_type is RecordType.A:
+        parsed = _parse_ipv4(value)
+        version = 4
+    else:
+        parsed = _parse_ipv6(value)
+        version = 6
+    if parsed is None:
+        return None
+    packed, canonical = parsed
+    return version, packed, canonical
 
 
 def _validate_absolute_name(name: object, field: str) -> str:
@@ -44,8 +138,11 @@ def _is_in_zone(name: str, origin: str) -> bool:
 
 
 def _record_sort_key(record: DNSRecord) -> tuple[int, bytes]:
-    address = ip_address(record.value)
-    return address.version, address.packed
+    parsed = _parse_address(record.value, record.record_type)
+    if parsed is None:
+        raise ValueError(f"{record.value!r} is not a valid address.")
+    version, packed, _ = parsed
+    return version, packed
 
 
 def validate_dns_zone_input(task: DNSZoneInput) -> None:
@@ -68,14 +165,11 @@ def validate_dns_zone_input(task: DNSZoneInput) -> None:
             raise ValueError(f"{field}.ttl must be a non-negative integer.")
 
         if record.record_type in (RecordType.A, RecordType.AAAA):
-            try:
-                address = ip_address(record.value)
-            except ValueError as error:
-                raise ValueError(f"{field}.value must be a valid {record.record_type.value} address.") from error
-            expected_version = 4 if record.record_type is RecordType.A else 6
-            if address.version != expected_version:
+            parsed = _parse_address(record.value, record.record_type)
+            if parsed is None:
                 raise ValueError(f"{field}.value must be a valid {record.record_type.value} address.")
-            if record.value != address.compressed:
+            _, _, canonical = parsed
+            if record.value != canonical:
                 raise ValueError(f"{field}.value must be a canonical {record.record_type.value} address.")
         else:
             target = _validate_absolute_name(record.value, f"{field}.value")
