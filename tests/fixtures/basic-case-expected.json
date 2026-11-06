@@ -1,0 +1,108 @@
+{
+    "resolutions": [
+        {
+            "query_name": "www.example.test.",
+            "query_type": "A",
+            "status": "ANSWER",
+            "canonical_name": "www.example.test.",
+            "answers": [
+                {
+                    "name": "www.example.test.",
+                    "record_type": "A",
+                    "value": "192.0.2.3",
+                    "ttl": 300
+                },
+                {
+                    "name": "www.example.test.",
+                    "record_type": "A",
+                    "value": "192.0.2.20",
+                    "ttl": 300
+                }
+            ],
+            "steps": [
+                {
+                    "name": "www.example.test.",
+                    "record_type": "A",
+                    "values": [
+                        "192.0.2.3",
+                        "192.0.2.20"
+                    ],
+                    "ttl": 300
+                }
+            ]
+        },
+        {
+            "query_name": "api.example.test.",
+            "query_type": "AAAA",
+            "status": "ANSWER",
+            "canonical_name": "www.example.test.",
+            "answers": [
+                {
+                    "name": "www.example.test.",
+                    "record_type": "AAAA",
+                    "value": "2001:db8::20",
+                    "ttl": 300
+                }
+            ],
+            "steps": [
+                {
+                    "name": "api.example.test.",
+                    "record_type": "CNAME",
+                    "values": [
+                        "www.example.test."
+                    ],
+                    "ttl": 60
+                },
+                {
+                    "name": "www.example.test.",
+                    "record_type": "AAAA",
+                    "values": [
+                        "2001:db8::20"
+                    ],
+                    "ttl": 300
+                }
+            ]
+        },
+        {
+            "query_name": "missing.example.test.",
+            "query_type": "A",
+            "status": "NXDOMAIN",
+            "canonical_name": "missing.example.test.",
+            "answers": [],
+            "steps": []
+        },
+        {
+            "query_name": "ipv4-only.example.test.",
+            "query_type": "AAAA",
+            "status": "NODATA",
+            "canonical_name": "ipv4-only.example.test.",
+            "answers": [],
+            "steps": []
+        },
+        {
+            "query_name": "loop-a.example.test.",
+            "query_type": "A",
+            "status": "CNAME_LOOP",
+            "canonical_name": "loop-a.example.test.",
+            "answers": [],
+            "steps": [
+                {
+                    "name": "loop-a.example.test.",
+                    "record_type": "CNAME",
+                    "values": [
+                        "loop-b.example.test."
+                    ],
+                    "ttl": 60
+                },
+                {
+                    "name": "loop-b.example.test.",
+                    "record_type": "CNAME",
+                    "values": [
+                        "loop-a.example.test."
+                    ],
+                    "ttl": 60
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,69 @@
+{
+    "origin": "example.test.",
+    "records": [
+        {
+            "name": "www.example.test.",
+            "record_type": "A",
+            "value": "192.0.2.20",
+            "ttl": 300
+        },
+        {
+            "name": "www.example.test.",
+            "record_type": "A",
+            "value": "192.0.2.3",
+            "ttl": 300
+        },
+        {
+            "name": "www.example.test.",
+            "record_type": "AAAA",
+            "value": "2001:db8::20",
+            "ttl": 300
+        },
+        {
+            "name": "api.example.test.",
+            "record_type": "CNAME",
+            "value": "www.example.test.",
+            "ttl": 60
+        },
+        {
+            "name": "ipv4-only.example.test.",
+            "record_type": "A",
+            "value": "192.0.2.40",
+            "ttl": 120
+        },
+        {
+            "name": "loop-a.example.test.",
+            "record_type": "CNAME",
+            "value": "loop-b.example.test.",
+            "ttl": 60
+        },
+        {
+            "name": "loop-b.example.test.",
+            "record_type": "CNAME",
+            "value": "loop-a.example.test.",
+            "ttl": 60
+        }
+    ],
+    "queries": [
+        {
+            "name": "www.example.test.",
+            "query_type": "A"
+        },
+        {
+            "name": "api.example.test.",
+            "query_type": "AAAA"
+        },
+        {
+            "name": "missing.example.test.",
+            "query_type": "A"
+        },
+        {
+            "name": "ipv4-only.example.test.",
+            "query_type": "AAAA"
+        },
+        {
+            "name": "loop-a.example.test.",
+            "query_type": "A"
+        }
+    ]
+}

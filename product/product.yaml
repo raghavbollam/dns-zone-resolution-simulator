@@ -1,0 +1,15 @@
+_ > nanoagent.plugin.v0001.ProductConfig:
+tagline: "Trace deterministic A and AAAA resolution through a supplied DNS zone"
+
+summary: "Given an offline authoritative zone and ordered address queries, the agent resolves direct records and CNAME chains, reports canonical answers and trace steps, and distinguishes NXDOMAIN, NODATA, and CNAME loops. A deterministic verifier independently simulates every lookup."
+
+highlights:
+  - "Offline and reproducible: every task supplies the complete authoritative zone"
+  - "Supports canonical A and AAAA answers plus deterministic CNAME traversal"
+  - "Distinguishes ANSWER, NXDOMAIN, NODATA, and CNAME_LOOP outcomes"
+  - "All-or-nothing verification checks every answer, status, canonical name, and trace step"
+
+steps:
+  - "Provide lowercase absolute zone records and ordered A or AAAA queries"
+  - "The agent follows CNAME chains and sorts terminal addresses numerically"
+  - "Review each structured answer or failure outcome and its deterministic trace"

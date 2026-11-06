@@ -1,0 +1,45 @@
+_ > nanoagent.plugin.v0001.ManifestConfig:
+id: dns-zone-resolution-simulator
+name: DNS Zone Resolution Simulator
+version: 0.1.0
+status: ready
+spec: nanoagent.plugin/v0001
+
+runtime > nanoagent.plugin.v0001.RuntimeConfig:
+  type: mcp_stdio
+  command: [uv, run, --frozen, python, -m, plugin]
+
+permissions > nanoagent.plugin.v0001.PermissionsConfig:
+  network > nanoagent.plugin.v0001.NetworkConfig:
+    hosts: []
+  filesystem > nanoagent.plugin.v0001.FilesystemConfig:
+    write: [workspace]
+
+tools > dict[contract.Tool, nanoagent.plugin.v0001.ToolConfig]:
+  read_zone:
+    description: Read the authoritative DNS zone records and ordered address queries for the current task.
+  write_resolutions:
+    description: Save the final structured DNS resolution results and traces.
+
+tasks > dict[contract.Task, nanoagent.plugin.v0001.TaskConfig]:
+  simulate-dns-resolution:
+    description: Resolve ordered A and AAAA queries against a supplied authoritative zone, including CNAME chains and failure outcomes.
+    runner: agent
+    tools: [read_zone, write_resolutions]
+    reference: null
+    instructions: |-
+      First call read_zone. All names are lowercase absolute names ending in a
+      dot. The supplied offline zone is authoritative and contains A, AAAA,
+      and CNAME records. Do not use the network.
+
+      Resolve each query in input order. At each name, return the requested A
+      or AAAA RRset when present. Otherwise, follow its CNAME record and add a
+      trace step. Sort terminal IP addresses by numeric address value. If a
+      name exists but has neither the requested type nor a CNAME, report
+      NODATA. If it does not exist, report NXDOMAIN. If CNAME traversal repeats
+      a name, report CNAME_LOOP with that repeated name as canonical_name.
+
+      ANSWER results contain the terminal address records and include the
+      terminal RRset as the final trace step. Other outcomes have no answers.
+      Return exactly one result per query in input order, then call
+      write_resolutions with the complete result.
