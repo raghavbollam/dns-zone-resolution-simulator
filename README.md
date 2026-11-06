@@ -4,7 +4,7 @@ A `nanoagent.plugin/v0001` plugin for the COMP 480/580 verifiable-tasks
 milestone. It resolves ordered `A` and `AAAA` queries against a supplied
 offline authoritative zone and reports deterministic answers and trace steps.
 
-## Tools and task
+## Tools
 
 | Tool | Does | Code |
 |---|---|---|
