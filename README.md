@@ -62,12 +62,16 @@ results, incorrect traces, and missing report files.
 ├── LICENSE
 ├── pyproject.toml
 ├── uv.lock
+├── .env
 ├── src/plugin/
 ├── tests/
 ├── ui/
 ├── product/
 └── verifier/
 ```
+
+The committed `.env` contains no secrets; it documents that this fully offline
+plugin requires no environment variables.
 
 ## Develop and run
 
